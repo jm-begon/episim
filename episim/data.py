@@ -1,12 +1,13 @@
-from copy import copy as clone
+from copy import deepcopy as clone
 
 class State(object):
-    def __init__(self, susceptible, exposed, infectious, recovered,
+    def __init__(self, susceptible, exposed, infectious, recovered, date,
                  reproduction_number=None, n_infection=0):
         self.susceptible = susceptible
         self.exposed = exposed
         self.infectious = infectious
         self.recovered = recovered
+        self.date = date
         self.reproduction_number = reproduction_number
         self.n_infection = n_infection
 
@@ -19,12 +20,13 @@ class State(object):
         return self.susceptible + self.exposed + self.infectious + self.recovered
 
     def __repr__(self):
-        return "{}({}, {}, {}, {}, {}, {})".format(
+        return "{}({}, {}, {}, {}, {}, {}, {})".format(
             self.__class__.__name__,
             repr(self.susceptible),
             repr(self.exposed),
             repr(self.infectious),
             repr(self.recovered),
+            repr(self.date),
             repr(self.reproduction_number),
             repr(self.n_infection)
         )
@@ -60,10 +62,9 @@ class StateDelta(State):
 
 class Outcome(object):
     @classmethod
-    def from_model(cls, model, steps, start_date, initial_state=None):
-        history = []
-        if initial_state:
-            history.append(initial_state)
+    def from_model(cls, model, steps):
+        history = [model.current_state]
+        start_date = model.current_state.date
         for state in model.run(steps):
             history.append(state)
         return cls(history, start_date)
@@ -71,6 +72,10 @@ class Outcome(object):
     def __init__(self, state_history, start_date):
         self.state_history = state_history
         self.dates = [start_date]
+
+    @property
+    def last_state(self):
+        return self.state_history[-1]
 
     @property
     def start_date(self):
@@ -88,7 +93,7 @@ class Outcome(object):
         o = self
         if copy:
             o = clone(o)
-        o.state_history.extends(outcome.state_history)
+        o.state_history.extend(outcome.state_history[1:])
         o.dates.extend(outcome.dates)
         return o
 

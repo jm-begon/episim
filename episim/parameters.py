@@ -136,5 +136,5 @@ class Confine(InterventionDecorator):
 
     @property
     def contact_frequency(self):
-        return self._efficiency * super().contact_frequency
+        return (1-self._efficiency) * super().contact_frequency
 

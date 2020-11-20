@@ -1,4 +1,7 @@
 import math
+
+import datetime
+
 from .data import State
 
 
@@ -157,11 +160,16 @@ class SEIRS(Model):
     def run(self, n_steps=1):
         S, E, I, R = self.current_state
         N = self.current_state.population_size
+        date = self.current_state.date
+        plus_one = datetime.timedelta(days=1)
+        n_infection = self.current_state.n_infection
 
-        for Sp, Ep, Ip, Rp, n_infection in self.simulator(S, E, I, R, 0, dt=n_steps):
+        for Sp, Ep, Ip, Rp, n_new_infection in self.simulator(S, E, I, R, n_infection, dt=n_steps):
             S, E, I, R = Sp, Ep, Ip, Rp
 
-            state = State(S, E, I, R, n_infection=n_infection)
+
+            date = date + plus_one
+            state = State(S, E, I, R, date, n_infection=n_new_infection)
 
             if math.fabs(N - S - E - I - R) > 1e-5:
                 raise ValueError("Conservation error: {} =/= {}".format(N, S + E + I + R))
@@ -228,12 +236,15 @@ class SIR(Model):
         S, E, I, R = self.current_state
         N = self.current_state.population_size
         n_infection = self.current_state.n_infection
+        date = self.current_state.date
+        plus_one = datetime.timedelta(days=1)
 
         for Sp, Ip, Rp in self.simulator(S, I, R, dt=n_steps):
             n_infection += (Sp - S)
             S, I, R = Sp, Ip, Rp
 
-            state = State(S, E, I, R, n_infection=n_infection)
+            date = date + plus_one
+            state = State(S, E, I, R, date, n_infection=n_infection)
 
             if math.fabs(N - S - E - I - R) > 1e-5:
                 raise ValueError("Conservation error: {} =/= {}".format(N, S + E + I + R))

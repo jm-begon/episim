@@ -1,7 +1,7 @@
 import datetime
 
 from episim.data import Outcome, State
-from episim.scenario import Scenario, OneYearNoIntervention
+from episim.scenario import Scenario, OneYearNoIntervention, Confinement
 from episim.plot import StateDashboard, FullDashboard
 from episim.model import SEIRS, SIR
 
@@ -58,13 +58,13 @@ class SEIRSsc(Scenario):
 
 if __name__ == '__main__':
     # outcome = SIRsc().run_model()
-    outcome = OneYearNoIntervention().run_model(SEIRS.factory)
     # outcome = SEIRSsc().run_model()
+    # outcome = OneYearNoIntervention().run_model(SEIRS.factory)
+    outcome = Confinement().run_model(SEIRS.factory)
     # print(len(outcome.state_history))
     # plot = StatePlot()
     # plot = CumulStatePlot()
     # plot = StateDashboard()
-    print(outcome.state_history[-1])
     plot = FullDashboard()
     plot(outcome).show()
 

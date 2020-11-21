@@ -200,17 +200,38 @@ class RiskyContactPlot(Plot):
 
 
 class DescriptionPlot(Plot):
-    def __call__(self, outcome):
+    def set_dates(self, dates):
+        return self
+
+    def plot_outcome(self, outcome, color="k", title=None):
+        # TODO better cut of lines
+        limit = False
         text = []
-        new_sep = "{}    > ".format(os.linesep)
+        tab = "    > "
+        contd = "       "
         for date, descr in outcome.date2descr.items():
-            text.append("{}{}{}".format(date.strftime("%d/%m/%y"), new_sep,
-                                        descr.replace(os.linesep, new_sep)))
+            text.append(date.strftime("%d/%m/%y"))
+            for line in descr.split(os.linesep):
+                suffix = tab
+                while len(line) > 85:
+                    limit = True
+                    text.append("{}{}".format(suffix, line[:85]))
+                    suffix = contd
+                    line = line[85:]
+                text.append("{}{}".format(suffix, line))
 
         text = os.linesep.join(text)
-        self.axes.text(0.5, 0.2, text)
-        # TODO max size ~90
-        # TODO optimal heigt depending on number of lines
+        self.axes.text(0, 0, text, verticalalignment="bottom", color=color)  # TODO max size ~90
+        # TODO https://matplotlib.org/3.1.1/gallery/pyplots/text_layout.html#sphx-glr-gallery-pyplots-text-layout-py
+
+        if limit:
+            # self.axes.axvline(len(outcome.state_history), linestyle=":", alpha=.1)
+            pass
+
+        if title is None:
+            title = "Description"
+        self.axes.set_title(title, color=color)
+        self.axes.axis("off")
 
 class StateDashboard(Dashboard):
 
@@ -238,7 +259,7 @@ class FullDashboard(Dashboard):
                     RiskyContactPlot, "darkorange")(outcome)
 
         # Second column
-        all_axes[0, 1].axis("off")
+        # all_axes[0, 1].axis("off")
         # all_axes[0, 1].text(0.5, 0.5, "Population size: {}".format(outcome.population_size))
         DescriptionPlot(all_axes[0, 1], self.convention)(outcome)
         InfectionNumberPlot(

@@ -59,11 +59,17 @@ class VPDecorator(VirusParameter):
 
 
 class WearingMask(VPDecorator):
-    def __init__(self, vp, airborne_protection_coefficient,
-                 droplet_protection_coefficient):
+    # TODO source on mask efficiency
+    """
+    TODO:
+    A contact can be with mask or without. Also efficiency vary between
+    mask types.
+    """
+    def __init__(self, vp, airborne_protection=.7,
+                 droplet_protection=.7):
         super().__init__(vp)
-        self._airborne_coeff = airborne_protection_coefficient
-        self._droplet_coeff = droplet_protection_coefficient
+        self._airborne_coeff = 1-airborne_protection
+        self._droplet_coeff = 1-droplet_protection
 
     @property
     def airborne_transmission_rate(self):
@@ -72,6 +78,21 @@ class WearingMask(VPDecorator):
     @property
     def droplet_transmission_rate(self):
         return self._droplet_coeff * super().droplet_transmission_rate
+
+    def __repr__(self):
+        return "{}({}, airborne_protection={}, droplet_protection={})" \
+               "".format(self.__class__.__name__,
+                         repr(self._virus_parameter),
+                         repr(self._airborne_coeff),
+                         repr(self._droplet_coeff))
+
+    def __str__(self):
+        return "{}({}, airborne_protec.={:.2f}, droplet_protec.={:.2f})" \
+               "".format(self.__class__.__name__,
+                         str(self._virus_parameter),
+                         self._airborne_coeff,
+                         self._droplet_coeff)
+
 
 
 class Distancing(VPDecorator):

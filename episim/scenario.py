@@ -2,7 +2,7 @@ import datetime
 import os
 
 from .data import State, Outcome
-from .parameters import PopulationBehavior, Confine
+from .parameters import PopulationBehavior
 from .virus import SARSCoV2Th
 
 
@@ -32,6 +32,8 @@ class Scenario(object):
 
 
 class OneYearNoIntervention(Scenario):
+    # Toy
+
     def run_model(self, model_factory):
         n_year = 10
         n_step = int(n_year * 365)
@@ -43,65 +45,7 @@ class OneYearNoIntervention(Scenario):
         start_date = self.__class__.default_initial_date()
 
         model = model_factory(initial_state,  virus, population, 0.1)
-        print(virus)
-        print(model)
 
         return Outcome.from_model(model, n_step, start_date)
 
-
-class Confinement(Scenario):
-    def run_model(self, model_factory):
-        n_days, n_days_after_confine, n_days_after_lift = 30, 60, 40
-
-        N = 11.5 * 1e6
-        initial_state = self.__class__.default_initial_state(N)
-        virus = SARSCoV2Th()
-        population = PopulationBehavior()
-
-        model = model_factory(initial_state, virus, population, 0.1)
-        # print(virus)
-        # print(population)
-        # print(model)
-
-        descr_ls = [
-            "Total population size: {:d}".format(int(N)),
-            "{}".format(str(virus)),
-            "Pop.: {}".format(str(population)),
-            "Model: {}".format(str(model))
-        ]
-
-
-        outcome = Outcome.from_model(model, n_days, self.multiline(descr_ls))
-        print("First", outcome.state_history[0])
-        print("Last", outcome.state_history[-1])
-
-        population = Confine(population, .9)
-
-        model = model_factory(outcome.last_state, virus, population, 0.1)
-        descr_ls = [
-            "Confinement: {}".format(str(population)),
-            "New model: {}".format(model)
-        ]
-        # print(model)
-        outcome = outcome.concat(
-            Outcome.from_model(model, n_days_after_confine,
-                               self.multiline(descr_ls))
-        )
-
-
-        population = PopulationBehavior()
-        model = model_factory(outcome.last_state, virus, population, 0.1)
-
-        descr_ls = [
-            "Deconfinement: {}".format(str(population)),
-            "New model: {}".format(model)
-        ]
-
-        outcome = outcome.concat(
-            Outcome.from_model(model, n_days_after_lift,
-                               self.multiline(descr_ls))
-        )
-
-
-        return outcome
 

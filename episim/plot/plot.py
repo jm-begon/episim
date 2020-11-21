@@ -1,5 +1,6 @@
 import datetime
 from abc import ABCMeta
+import numpy as np
 
 from matplotlib import pyplot as plt
 
@@ -25,10 +26,28 @@ class Convention(object):
     def recovered_color(self):
         return "dodgerBlue"
 
+
+class Colormap(Convention):
+    # https://matplotlib.org/tutorials/colors/colormaps.html
+    def __init__(self, plt_name="tab10"):
+        self.cmap = plt.get_cmap(plt_name)
+
+    def yield_colors(self, n_colors):
+        if self.cmap.N == 256:
+            # Probably not a qualitative color map
+            colors = self.cmap(np.linspace(0., 1., n_colors))
+            for color in colors:
+                yield color
+        else:
+            for i in range(n_colors):
+                yield self.cmap(i)
+
+
+
 class BasePlot(object):
     def __init__(self, convention=None):
         if convention is None:
-            convention = Convention()
+            convention = Colormap()
         self._convention = convention
 
     @property
@@ -122,13 +141,13 @@ class Plot(BasePlot, metaclass=ABCMeta):
             x = (date-start_date).days
             self.axes.axvline(x, color="k", alpha=.5, linestyle="--")
 
-    def __call__(self, *outcomes):
+    def __call__(self, *outcomes, **kwargs):
         for outcome in outcomes:
-            self.plot_outcome(outcome)
-        self.set_dates(outcomes[0].dates)
+            self.plot_outcome(outcome, **kwargs)
+            self.set_dates(outcome.dates)
         return self
 
-    def plot_outcome(self, outcome, *args, **kwargs):
+    def plot_outcome(self, outcome, **kwargs):
         return self
 
 
@@ -145,7 +164,7 @@ class TwoAxesPlot(Plot):
         self.color_2 = color_2
         self.title = title
 
-    def plot_outcome(self, outcome):
+    def plot_outcome(self, outcome, **kwargs):
         self.plot1.plot_outcome(outcome, color=self.color_1, title="")
         self.plot2.plot_outcome(outcome, color=self.color_2, title="")
         self.axes.set_title(self.title)

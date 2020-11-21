@@ -151,6 +151,12 @@ class SEIRS(Model):
 
         return s + ".set_state({})".format(repr(self.current_state))
 
+    def __str__(self):
+        return  "{}(beta={:.2e}, kappa={:.2e}, gamma={:.2e}, ksi={:.2e})" \
+                "".format(self.__class__.__name__,
+                          self.beta, self.kappa,
+                          self.gamma, self.ksi)
+
 
 
     def _compute_reproduction_number(self, n_susceptible, n_total):

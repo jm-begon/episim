@@ -1,3 +1,5 @@
+import os
+
 import numpy as np
 
 from .plot import Plot, Dashboard, TwoAxesPlot
@@ -197,6 +199,19 @@ class RiskyContactPlot(Plot):
         self.axes.set_title(title)
 
 
+class DescriptionPlot(Plot):
+    def __call__(self, outcome):
+        text = []
+        new_sep = "{}    > ".format(os.linesep)
+        for date, descr in outcome.date2descr.items():
+            text.append("{}{}{}".format(date.strftime("%d/%m/%y"), new_sep,
+                                        descr.replace(os.linesep, new_sep)))
+
+        text = os.linesep.join(text)
+        self.axes.text(0.5, 0.2, text)
+        # TODO max size ~90
+        # TODO optimal heigt depending on number of lines
+
 class StateDashboard(Dashboard):
 
     def __call__(self, outcome):
@@ -224,7 +239,8 @@ class FullDashboard(Dashboard):
 
         # Second column
         all_axes[0, 1].axis("off")
-        all_axes[0, 1].text(0.5, 0.5, "Population size: {}".format(outcome.population_size))
+        # all_axes[0, 1].text(0.5, 0.5, "Population size: {}".format(outcome.population_size))
+        DescriptionPlot(all_axes[0, 1], self.convention)(outcome)
         InfectionNumberPlot(
             all_axes[1, 1],
             self.convention
@@ -232,3 +248,5 @@ class FullDashboard(Dashboard):
         InfectedPlot(all_axes[2, 1], self.convention)(outcome)
         self.figure.subplots_adjust(wspace=0.3)
         return self
+
+

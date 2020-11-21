@@ -133,8 +133,14 @@ class Confine(InterventionDecorator):
         super().__init__(population_parameter)
         self._efficiency = efficiency
 
+    def __repr__(self):
+        return "{}({}, efficiency={})".format(self.__class__.__name__,
+                                              repr(self._population_parameter),
+                                              repr(self._efficiency))
+
 
     @property
     def contact_frequency(self):
         return (1-self._efficiency) * super().contact_frequency
+
 

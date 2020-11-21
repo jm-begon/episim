@@ -1,4 +1,5 @@
 import datetime
+import os
 
 from .data import State, Outcome
 from .parameters import PopulationBehavior, Confine
@@ -15,7 +16,7 @@ class Scenario(object):
 
     @classmethod
     def default_initial_date(cls):
-        return datetime.datetime(2020, 1, 1)
+        return datetime.date(2020, 1, 1)
 
 
     def __init__(self, title=None):
@@ -23,6 +24,9 @@ class Scenario(object):
 
     def run_model(self, model_factory):
         pass
+
+    def multiline(self, ls):
+        return os.linesep.join(ls)
 
 
 
@@ -59,28 +63,44 @@ class Confinement(Scenario):
         # print(population)
         # print(model)
 
-        outcome = Outcome.from_model(model, n_days)
+        descr_ls = [
+            "Total population size: {:d}".format(int(N)),
+            "{}".format(str(virus)),
+            "Pop.: {}".format(str(population)),
+            "Model: {}".format(str(model))
+        ]
+
+
+        outcome = Outcome.from_model(model, n_days, self.multiline(descr_ls))
         print("First", outcome.state_history[0])
         print("Last", outcome.state_history[-1])
 
         population = Confine(population, .9)
 
         model = model_factory(outcome.last_state, virus, population, 0.1)
+        descr_ls = [
+            "Confinement: {}".format(str(population)),
+            "New model: {}".format(model)
+        ]
         # print(model)
-        outcome = outcome.concat(Outcome.from_model(model, n_days_after_confine))
-        print("First", outcome.state_history[0])
-        print("Last", outcome.state_history[-1])
+        outcome = outcome.concat(
+            Outcome.from_model(model, n_days_after_confine,
+                               self.multiline(descr_ls))
+        )
 
 
         population = PopulationBehavior()
         model = model_factory(outcome.last_state, virus, population, 0.1)
-        # print(model)
 
-        outcome = outcome.concat(Outcome.from_model(model, n_days_after_lift))
-        print("First", outcome.state_history[0])
-        print("Last", outcome.state_history[-1])
+        descr_ls = [
+            "Deconfinement: {}".format(str(population)),
+            "New model: {}".format(model)
+        ]
 
-
+        outcome = outcome.concat(
+            Outcome.from_model(model, n_days_after_lift,
+                               self.multiline(descr_ls))
+        )
 
 
         return outcome

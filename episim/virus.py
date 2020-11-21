@@ -27,6 +27,17 @@ class Virus(VirusParameter):
                          repr(self._name),
                          )
 
+    def __str__(self):
+        return "{}(airborne_transmission_rate={:.2e}, " \
+               "droplet_transmisison_rate={:.2e}, exposed_duration={:.1f}, " \
+               "infectious_duration={:.1f}, immunity_drop_rate={:.2e})" \
+               "".format(Virus.__name__,
+                         self._airborne_tr,
+                         self._droplet_tr,
+                         self._exposed_t,
+                         self._infectious_t,
+                         self._immunity_dr)
+
     @property
     def airborne_transmission_rate(self):
         return self._airborne_tr

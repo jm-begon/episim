@@ -1,4 +1,5 @@
 from copy import deepcopy as clone
+from collections import OrderedDict
 
 class State(object):
     def __init__(self, susceptible, exposed, infectious, recovered, date,
@@ -62,24 +63,30 @@ class StateDelta(State):
 
 class Outcome(object):
     @classmethod
-    def from_model(cls, model, steps):
+    def from_model(cls, model, steps, description=""):
         history = [model.current_state]
         start_date = model.current_state.date
         for state in model.run(steps):
             history.append(state)
-        return cls(history, start_date)
+        return cls(history, start_date, description)
 
-    def __init__(self, state_history, start_date):
+    def __init__(self, state_history, start_date, description=""):
         self.state_history = state_history
-        self.dates = [start_date]
+        self.date2descr = OrderedDict()
+        self.date2descr[start_date] = description
 
     @property
     def last_state(self):
         return self.state_history[-1]
 
     @property
+    def dates(self):
+        return list(self.date2descr.keys())
+
+    @property
     def start_date(self):
-        return self.dates[0]
+        for date in self.date2descr.keys():
+            return date
 
     @property
     def n_infection(self):
@@ -94,8 +101,15 @@ class Outcome(object):
         if copy:
             o = clone(o)
         o.state_history.extend(outcome.state_history[1:])
-        o.dates.extend(outcome.dates)
+        for date, descr in outcome.date2descr.items():
+            o.date2descr[date] = descr
         return o
+
+    def get_dated_descriptions(self):
+        import os
+        # TODO datetime + move
+        return os.linesep.join(["{} - {}".format(k, v) for k, v in self.date2descr.items()])
+
 
 
 

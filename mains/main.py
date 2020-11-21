@@ -26,9 +26,7 @@ class SIRsc(Scenario):
         model.resolution = 0.1
 
 
-        return Outcome.from_model(model, n_days,
-                                  datetime.datetime(2020, 2, 1),
-                                  initial_state)
+        return Outcome.from_model(model, n_days)
 
 class SEIRSsc(Scenario):
     def run_model(self, model_factory=None):
@@ -52,9 +50,7 @@ class SEIRSsc(Scenario):
         model.resolution = 10
 
 
-        return Outcome.from_model(model, n_days,
-                                  self.__class__.default_initial_date(),
-                                  initial_state)
+        return Outcome.from_model(model, n_days)
 
 if __name__ == '__main__':
     # outcome = SIRsc().run_model()

@@ -18,9 +18,9 @@ class Scenario(object):
     def default_initial_date(cls):
         return datetime.date(2020, 1, 1)
 
-
-    def __init__(self, title=None):
-        self.title = self.__class__.__name__ if title is None else title
+    @property
+    def title(self):
+        return self.__class__.__name__
 
     def run_model(self, model_factory):
         pass

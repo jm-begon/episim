@@ -261,7 +261,11 @@ class FullDashboard(Dashboard):
         # Second column
         # all_axes[0, 1].axis("off")
         # all_axes[0, 1].text(0.5, 0.5, "Population size: {}".format(outcome.population_size))
-        DescriptionPlot(all_axes[0, 1], self.convention)(outcome)
+        title = "Description"
+        if outcome.name:
+            title = "{} -- {}".format(title, outcome.name)
+        DescriptionPlot(all_axes[0, 1], self.convention)(outcome,
+                                                         title=title)
         InfectionNumberPlot(
             all_axes[1, 1],
             self.convention

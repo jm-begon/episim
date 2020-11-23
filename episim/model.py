@@ -232,6 +232,12 @@ class SIR(Model):
         return s + ".set_state({})".format(repr(self.current_state))
 
 
+    def __str__(self):
+        return  "{}(beta={:.2e}, gamma={:.2e})" \
+                "".format(self.__class__.__name__,
+                          self.beta, self.gamma)
+
+
     def _compute_reproduction_number(self, n_susceptible, n_total):
         return self.beta / self.gamma * n_susceptible / float(n_total)
 
@@ -246,7 +252,7 @@ class SIR(Model):
         plus_one = datetime.timedelta(days=1)
 
         for Sp, Ip, Rp in self.simulator(S, I, R, dt=n_steps):
-            n_infection += (Sp - S)
+            n_infection += (S - Sp)
             S, I, R = Sp, Ip, Rp
 
             date = date + plus_one

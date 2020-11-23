@@ -61,7 +61,7 @@ class InfectionNumberMPlot(MultiOutputPlot):
 
 
     def pack(self):
-        self.axes.set_title("Percentage of cumulattive infection")
+        self.axes.set_title("Percentage of cumulative infection")
         self.axes.grid(True)
 
 
@@ -82,7 +82,7 @@ class ComparatorDashboard(Dashboard):
         ReproductionNumberMPlot(all_axes[2, 0], self.convention)(*outcomes)
 
         for i, c, o in index_color_outcome(self.convention, outcomes):
-            title = "Outcome {:d}".format(i+1)
+            title = o.name if o.name else "Outcome {:d}".format(i+1)
             DescriptionPlot(all_axes[i, 1],
                             self.convention).plot_outcome(o, color=c, title=title)
 

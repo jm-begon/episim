@@ -74,6 +74,7 @@ class Outcome(object):
         self.state_history = state_history
         self.date2descr = OrderedDict()
         self.date2descr[start_date] = description
+        self.name = None
 
     @property
     def last_state(self):

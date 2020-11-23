@@ -61,12 +61,112 @@ class VPDecorator(VirusParameter):
 class WearingMask(VPDecorator):
     # TODO source on mask efficiency
     """
-    TODO:
-    A contact can be with mask or without. Also efficiency vary between
-    mask types.
+    Efficiency
+    ----------
+    The probability `p_{i,j}` of a susceptible person `i` being infected by an
+    infectious person `j` is supposed to be of the form
+
+    .. math::
+        p_{i,j} = F_{i,j}(A, D, X)
+
+    where `A` is the quantity of breathed airborne molecules,
+    `D` is the quantity of breathed droplet molecules,
+    `X` represents all the other contamination method (which are believed
+    to be much less important for SARS-CoV 2 [1]).
+
+    The probability also depends on the viral load of `j` and of the immune
+    system of `i`.
+
+    The marginals should be monotonously increasing (if the input values of `F`
+    are fixed except for one, increasing that value should increase the
+    infection probability).
+
+    A mask works by filtering `A` and `D`. If the mask offers an airborne
+    out-protection of `u` and a droplet out-protection of `q` and person `j`
+    emits `A` and `D`, the mask will let pass only
+
+    ..math::
+        A' = (1-u) A
+        D' = (1-q) D
+
+
+    The mask also offers a protection to the wearer, although to a lesser
+    extent (harder to get data on this). If the mask offers an airborne
+    in-protection of `v` and a droplet in-protection of `r`, person `i`
+    is only exposed to
+
+    ..math::
+        A' = (1-v) A
+        D' = (1-r) D
+
+    of what is emitted by `j` (possibly already filtered by `j`'s mask).
+
+    Other factors come into play. Not all masks offer the same protection.
+    Other factors also governs `F_{i, j}` (e.g. indoor vs. outdoor for airborne,
+    physical distance for droplet).
+    The protection only applies when at least one party is wearing the mask.
+    The probability of wearing a mask might not be uniform in the general
+    population (clusters of non-wearers who interact more among them).
+    The probability of being infectious might also depends on mask habits.
+    The mask efficiency might not be constant with respect to time, etc.
+
+    The `VirusParameter` class relies on the following model
+
+    ..math::
+        p_{i, j} = p = max(p_A, p_D)
+
+
+    Given average efficiencies w and s (accounting for u, q, v, r and the
+    probability of each party wearing a mask), we will make the following linear
+    assuptiom
+
+    ..math::
+        p' = max((1-w) p_A, (1-s) p_D)
+
+
+    Sources
+    -------
+    [1] https://www.youtube.com/watch?v=OAYZr1WbePk
+
+
+    Default values
+    --------------
+    Assumptions to compute the average protection
+
+     - x % of people wearing mask
+     - Uniformity and independence
+
+    ..math::
+        1-w =  (1-x) \times (1-x) 1 + (1-x) \times x \times (1-u)
+             + x \times (1-x) (1-v) + x \times x (1-v)(1-u)
+
+
+    We will use the following default values:
+
+     - x = .75
+     - u = .8, q = .9
+     - v = .3, r = .7
+
+
     """
-    def __init__(self, vp, airborne_protection=.7,
-                 droplet_protection=.7):
+    @classmethod
+    def compute_protection(cls, p_wear, prot_i, prot_s):
+        # x is the risk
+        x = 0
+        # Nobody wears mask
+        x += (1-p_wear)**2 * 1
+        # Only infectious wears mask
+        x += (1-p_wear)*p_wear * (1-prot_i)
+        # Only susceptible wears mask
+        x += p_wear*(1-p_wear) * (1-prot_s)
+        # Both wear mask
+        x += p_wear**2 * (1-prot_i) * (1-prot_s)
+
+        return 1 - x
+
+
+    def __init__(self, vp, airborne_protection=.69,
+                 droplet_protection=.85):
         super().__init__(vp)
         self._airborne_coeff = 1-airborne_protection
         self._droplet_coeff = 1-droplet_protection
@@ -83,15 +183,15 @@ class WearingMask(VPDecorator):
         return "{}({}, airborne_protection={}, droplet_protection={})" \
                "".format(self.__class__.__name__,
                          repr(self._virus_parameter),
-                         repr(self._airborne_coeff),
-                         repr(self._droplet_coeff))
+                         repr(1-self._airborne_coeff),
+                         repr(1-self._droplet_coeff))
 
     def __str__(self):
         return "{}({}, airborne_protec.={:.2f}, droplet_protec.={:.2f})" \
                "".format(self.__class__.__name__,
                          str(self._virus_parameter),
-                         self._airborne_coeff,
-                         self._droplet_coeff)
+                         1-self._airborne_coeff,
+                         1-self._droplet_coeff)
 
 
 

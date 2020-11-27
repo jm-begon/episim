@@ -59,10 +59,10 @@ def main(argv=sys.argv[1:]):
                                 nd_bc, nd_cd, nd_adc, N, I, res):
         outcomes.append(scenario.run_model(factory))
 
-    ComparatorDashboard()(*outcomes).show()
+    ComparatorDashboard()(*outcomes).show()#.save("comparison.png")
 
-    for outcome in outcomes:
-        FullDashboard()(outcome).show()
+    for i, outcome in enumerate(outcomes):
+        FullDashboard()(outcome).show()#.save("dashboard_{}.png".format(i))
 
     # ComparatorDashboard()(*outcomes[1:]).show()
 
@@ -139,7 +139,8 @@ class SanityMeasure(BaseScenario):
 
         model.beta *= self.measure_effect
         descr_ls = [
-            "Sanity measures: dividing transmission rate by 2",
+            "Sanity measures: dividing transmission rate by "
+            "{:.2f}".format(1./self.measure_effect),
             "New model: {}".format(model)
         ]
 

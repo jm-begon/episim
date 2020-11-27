@@ -5,7 +5,7 @@ import datetime
 from .data import State
 
 
-class FirstOrderSimulator(object):
+class EulerSimulator(object):
     """
     Explicit Euler method
     """
@@ -94,7 +94,7 @@ class SEIRS(Model):
 
     def __init__(self, beta=0, kappa=0, gamma=0, ksi=0, resolution=0.1):
         if resolution is None:
-            resolution = FirstOrderSimulator
+            resolution = EulerSimulator
         super().__init__(resolution=resolution)
         self.beta = beta
         self.kappa = kappa
@@ -133,8 +133,8 @@ class SEIRS(Model):
 
 
 
-        self.simulator = FirstOrderSimulator(dS_dt, dE_dt, dI_dt, dR_dt, S2E_f,
-                                             step_size=resolution)
+        self.simulator = EulerSimulator(dS_dt, dE_dt, dI_dt, dR_dt, S2E_f,
+                                        step_size=resolution)
 
 
     def __repr__(self):
@@ -216,8 +216,8 @@ class SIR(Model):
             I2R = self.gamma * I
             return I2R
 
-        self.simulator = FirstOrderSimulator(dS_dt, dI_dt, dR_dt,
-                                             step_size=resolution)
+        self.simulator = EulerSimulator(dS_dt, dI_dt, dR_dt,
+                                        step_size=resolution)
 
     def __repr__(self):
         s = "{}(beta={}, gamma={}, resolution={})".format(

@@ -58,6 +58,10 @@ class BasePlot(object):
         plt.show()
         return self
 
+    def save(self, fpath, **kwargs):
+        plt.savefig(fpath, **kwargs)
+        return self
+
     def close(self):
         pass
 

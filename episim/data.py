@@ -53,6 +53,8 @@ class State(object):
         return StateDelta(S1-S2, E1-E2, I1-I2, R1-R2, dRN, NI1-NI2)
 
 
+
+
 class StateDelta(State):
     pass
 

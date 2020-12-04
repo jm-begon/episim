@@ -58,6 +58,15 @@ class VPDecorator(VirusParameter):
         return self._virus_parameter.immunity_drop_rate
 
 
+class TransmissionRateMultiplier(VPDecorator):
+    def __init__(self, virus_parameter, weight=1.):
+        super().__init__(virus_parameter)
+        self.weight = weight
+    @property
+    def transmission_rate(self):
+        return self.weight * super().transmission_rate
+
+
 class WearingMask(VPDecorator):
     # TODO source on mask efficiency
     """

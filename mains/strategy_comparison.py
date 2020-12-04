@@ -2,7 +2,8 @@ import argparse, sys
 import datetime
 
 from episim.data import Outcome, State
-from episim.parameters import PopulationBehavior, Confine
+from episim.parameters import PopulationBehavior, Confine, \
+    TransmissionRateMultiplier
 from episim.plot.multi_outcome import ComparatorDashboard
 from episim.scenario import Scenario
 from episim.plot import FullDashboard
@@ -61,8 +62,9 @@ def main(argv=sys.argv[1:]):
 
     ComparatorDashboard()(*outcomes).show()#.save("comparison.png")
 
-    for i, outcome in enumerate(outcomes):
-        FullDashboard()(outcome).show()#.save("dashboard_{}.png".format(i))
+    # for i, outcome in enumerate(outcomes):
+    #     FullDashboard()(outcome).show()#.save("dashboard_{}.png".format(i))
+
 
     # ComparatorDashboard()(*outcomes[1:]).show()
 
@@ -137,7 +139,9 @@ class SanityMeasure(BaseScenario):
         outcome = Outcome.from_model(model, self.n_days_1,
                                      self.starting_description(model))
 
-        model.beta *= self.measure_effect
+
+        virus = TransmissionRateMultiplier(self.virus, 0.5)
+        model = self.get_model(model_factory, virus=virus, state=outcome.last_state)
         descr_ls = [
             "Sanity measures: dividing transmission rate by "
             "{:.2f}".format(1./self.measure_effect),

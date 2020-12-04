@@ -53,6 +53,75 @@ class State(object):
         return StateDelta(S1-S2, E1-E2, I1-I2, R1-R2, dRN, NI1-NI2)
 
 
+class Compartment(object):
+    def __init__(self, name):
+        self.name = name
+        self.parent = None
+        self.cumul = None
+
+    @property
+    def size(self):
+        return 0
+
+    def __iter__(self):
+        return self,
+
+
+class Leaf(Compartment):
+    def __init__(self, name, size):
+        super().__init__(name)
+        self._size = size
+
+    @property
+    def size(self):
+        return self._size
+
+
+class Node(Compartment):
+    def __init__(self, name, *children):
+        super().__init__(name)
+        self.children = list(children)
+        for child in self.children:
+            child.parent = self
+
+    @property
+    def size(self):
+        return sum(child.size for child in self.children)
+
+    def __iter__(self):
+        for child in self.children:
+            for x in child:
+                yield x
+
+    def add_child(self, compartment):
+        self.children.append(compartment)
+
+
+class Hierarchy(object):
+    def __init__(self):
+        self.root = Node("population")
+        self.shorcut = {}
+
+    def __setattr__(self, key, value):
+        if key in {"root", "shortcut"}:
+            return super().__setattr__(key, value)
+
+
+
+    def __getattr__(self, key):
+        # https://stackoverflow.com/questions/3278077/difference-between-getattr-vs-getattribute
+        compartment = self.shorcut.get(key)
+        if compartment is None:
+            pass  # TODO look everywhere
+
+        if compartment is not None:
+            return compartment
+
+        raise AttributeError("'{}' object has no attribute '{}'"
+                             "".format(self.__class__.__name__, key))
+
+
+
 
 
 class StateDelta(State):

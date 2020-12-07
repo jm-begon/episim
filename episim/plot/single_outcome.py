@@ -6,17 +6,16 @@ from .plot import Plot, Dashboard, TwoAxesPlot
 
 
 class StatePlot(Plot):
-    def plot_outcome(self, outcome):
-        states = outcome.state_history
-        t = np.arange(len(states))
+    def plot_outcome(self, outcome, *_):
+        t = np.arange(len(outcome))
         N = outcome.population_size
 
 
         # rates
-        s = np.array([s.susceptible for s in states]) / N
-        e = np.array([s.exposed for s in states]) / N
-        i = np.array([s.infectious for s in states]) / N
-        r = np.array([s.recovered for s in states]) / N
+        s = np.array([s.susceptible for s in outcome]) / N
+        e = np.array([s.exposed for s in outcome]) / N
+        i = np.array([s.infectious for s in outcome]) / N
+        r = np.array([s.recovered for s in outcome]) / N
 
         self.axes.plot(t, s, color=self.convention.susceptible_color,
                        label="Susceptible")
@@ -39,17 +38,16 @@ class StatePlot(Plot):
 
 
 class CumulStatePlot(Plot):
-    def plot_outcome(self, outcome):
+    def plot_outcome(self, outcome, *_):
         alpha = .25
-        states = outcome.state_history
-        t = np.arange(len(states))
+        t = np.arange(len(outcome))
         N = outcome.population_size
 
         # rates
-        s = np.array([s.susceptible for s in states]) / N
-        e = np.array([s.exposed for s in states]) / N
-        i = np.array([s.infectious for s in states]) / N
-        r = np.array([s.recovered for s in states]) / N
+        s = np.array([s.susceptible for s in outcome]) / N
+        e = np.array([s.exposed for s in outcome]) / N
+        i = np.array([s.infectious for s in outcome]) / N
+        r = np.array([s.recovered for s in outcome]) / N
 
         lower = 0
         higher = lower + s
@@ -92,13 +90,12 @@ class CumulStatePlot(Plot):
 
 
 class InfectedPlot(Plot):
-    def plot_outcome(self, outcome):
-        states = outcome.state_history
-        t = np.arange(len(states))
+    def plot_outcome(self, outcome, *_):
+        t = np.arange(len(outcome))
 
         # rates
-        e = np.array([s.exposed for s in states])
-        i = np.array([s.infectious for s in states])
+        e = np.array([s.exposed for s in outcome])
+        i = np.array([s.infectious for s in outcome])
 
         if e.max() > 0:
             self.axes.plot(t, e, color=self.convention.exposed_color,
@@ -122,9 +119,8 @@ class ReproductionNumberPlot(Plot):
         return "Reproduction number (R)"
 
     def plot_outcome(self, outcome, color="k", title=None):
-        states = outcome.state_history
-        t = np.arange(len(states))
-        R = np.array([s.reproduction_number for s in states])
+        t = np.arange(len(outcome))
+        R = np.array([s.reproduction_number for s in outcome])
 
         self.axes.plot(t, R, color=color)
         self.axes.set_ylabel("Reproduction number", color=color)
@@ -143,10 +139,9 @@ class InfectionNumberPlot(Plot):
         return "Percentage of cumulattive infection"
 
     def plot_outcome(self, outcome, color="k", title=None):
-        states = outcome.state_history
         N = outcome.population_size
-        t = np.arange(len(states))
-        R = np.array([s.n_infection for s in states]) / N
+        t = np.arange(len(outcome))
+        R = np.array([s.n_infection for s in outcome]) / N
 
         self.axes.plot(t, R, color=color)
         self.axes.set_ylabel("Perc. cumul. infection", color=color)
@@ -176,14 +171,13 @@ class RiskyContactPlot(Plot):
     So the proportion of risky contact is: RC/TC = S I / N^2
     """
     def plot_outcome(self, outcome, color="k", title=None):
-        states = outcome.state_history
-        t = np.arange(len(states))
+        t = np.arange(len(outcome))
         N = outcome.population_size
         # N = 1
 
         # rates
-        s = np.array([s.susceptible for s in states])
-        i = np.array([s.infectious for s in states])
+        s = np.array([s.susceptible for s in outcome])
+        i = np.array([s.infectious for s in outcome])
 
         y = s * i / N**2
 

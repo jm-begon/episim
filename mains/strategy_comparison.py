@@ -2,6 +2,7 @@ import argparse, sys
 import datetime
 
 from episim.data import Outcome, State
+from episim.ontology import Ontology
 from episim.parameters import PopulationBehavior, Confine, \
     TransmissionRateMultiplier
 from episim.plot.multi_outcome import ComparatorDashboard
@@ -62,8 +63,8 @@ def main(argv=sys.argv[1:]):
 
     ComparatorDashboard()(*outcomes).show()#.save("comparison.png")
 
-    # for i, outcome in enumerate(outcomes):
-    #     FullDashboard()(outcome).show()#.save("dashboard_{}.png".format(i))
+    for i, outcome in enumerate(outcomes):
+        FullDashboard()(outcome).show()#.save("dashboard_{}.png".format(i))
 
 
     # ComparatorDashboard()(*outcomes[1:]).show()
@@ -77,7 +78,9 @@ class BaseScenario(Scenario):
         I = n_infectious
         if initial_date is None:
             initial_date = datetime.date(2020, 1, 1)
-        self.initial_state = State(N-I, 0, I, 0, initial_date, n_infection=I)
+        self.initial_state = State(initial_date, susceptible=N-I, infectious=I,
+                                   n_infection=I)
+        # self.initial_state = State(N-I, 0, I, 0, initial_date, n_infection=I)
         if virus is None:
             virus = SARSCoV2Th()
         self.virus = virus
@@ -99,10 +102,12 @@ class BaseScenario(Scenario):
 
 
     def starting_description(self, model):
+        ontology = Ontology.default_ontology()
+        state = ontology(self.initial_state)
         descr_ls = [
             "Number of infectious    {:d} / {:d}    total population size"
-            "".format(self.initial_state.infectious,
-                      self.initial_state.population_size),
+            "".format(state.infectious,
+                      state.population),
             "{}".format(self.virus),
             "Pop.: {}".format(self.population),
             "Model: {}".format(model)

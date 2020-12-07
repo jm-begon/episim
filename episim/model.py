@@ -6,6 +6,7 @@ from collections import defaultdict
 import numpy as np
 from scipy import sparse
 
+from episim.ontology import Ontology
 from episim.plot.modeling import System, Accumulator
 from .data import State
 
@@ -65,6 +66,18 @@ class LinNonLinEulerSimulator(object):
 
                 x = x + h * dx
             yield x
+
+
+class F(object):
+    def __init__(self, callable, label):
+        self.label = label
+        self.callable = callable
+
+    def __call__(self, *args, **kwargs):
+        return self.callable(*args, **kwargs)
+
+    def __str__(self):
+        return self.label
 
 
 class Dynamic(object):
@@ -131,23 +144,44 @@ class Model(object):
     def __init__(self, resolution=0.1):
         self.current_state = None
         self.resolution = resolution
+        self.ontology = Ontology.default_ontology()
 
     def _compute_reproduction_number(self, n_susceptible, n_total):
         return 0
 
 
-
     def set_state(self, state):
-        R = self._compute_reproduction_number(state.susceptible,
-                                              state.population_size)
+        queriable = self.ontology(state)
+        R = self._compute_reproduction_number(queriable.susceptible,
+                                              queriable.population)
         state.reproduction_number = R
+        if state.n_infection is None:
+            state.n_infection = queriable.infected
         self.current_state = state
         return self
 
+    def _state2variables(self, state):
+        return tuple()
+
+    def _variables2state(self, date, *values):
+        return State(date)
 
     def run(self, n_steps=1):
-        for i in range(n_steps):
-            yield self.current_state
+        variables = self._state2variables(self.current_state)
+
+        date = self.current_state.date
+        plus_one = datetime.timedelta(days=1)
+
+        for variables in self.simulator(*variables, dt=n_steps):
+
+            date = date + plus_one
+
+            state = self._variables2state(date, *variables)
+
+            self.set_state(state)
+
+            yield state
+
 
 
 
@@ -177,9 +211,6 @@ class SEIRS(Model):
         gamma = 1. / virus.infectious_duration
         ksi = virus.immunity_drop_rate
         return beta, kappa, gamma, ksi
-
-
-
 
 
     def __init__(self, beta=0, kappa=0, gamma=0, ksi=0, resolution=0.1):
@@ -251,30 +282,33 @@ class SEIRS(Model):
     def _compute_reproduction_number(self, n_susceptible, n_total):
         return self.beta / self.gamma * n_susceptible / float(n_total)
 
+    def _state2variables(self, state):
+        zero = lambda x: 0 if x is None else x
+        S = zero(state.susceptible)
+        E = zero(state.exposed)
+        I = zero(state.infectious)
+        R = zero(state.recovered)
 
-    def run(self, n_steps=1):
-        S, E, I, R = self.current_state
-        N = self.current_state.population_size
-        date = self.current_state.date
-        plus_one = datetime.timedelta(days=1)
+        return S, E, I, R
+
+
+    def _variables2state(self, date, *values):
+        S, E, I, R = values
+
         n_infection = self.current_state.n_infection
+        n_infection += self.acc_n_infect.value
+        self.acc_n_infect.reset()
 
-        for Sp, Ep, Ip, Rp in self.simulator(S, E, I, R, dt=n_steps):
-            S, E, I, R = Sp, Ep, Ip, Rp
+        state = State(date)
+        state.susceptible = S
+        state.exposed = E
+        state.infectious = I
+        state.recovered = R
+        state.n_infection = n_infection
 
-            n_infection += self.acc_n_infect.value
-            self.acc_n_infect.reset()
+        return state
 
 
-            date = date + plus_one
-            state = State(S, E, I, R, date, n_infection=n_infection)
-
-            if np.abs(N - S - E - I - R) > 1e-5:
-                raise ValueError("Conservation error: {} =/= {}".format(N, S + E + I + R))
-
-            self.set_state(state)
-
-            yield state
 
 
 
@@ -333,26 +367,26 @@ class SIR(Model):
         return self.beta / self.gamma * n_susceptible / float(n_total)
 
 
+    def _state2variables(self, state):
+        zero = lambda x: 0 if x is None else x
+        S = zero(state.susceptible)
+        I = zero(state.infectious)
+        R = zero(state.recovered)
 
-    def run(self, n_steps=1):
+        return S, I, R
 
-        S, E, I, R = self.current_state
-        N = self.current_state.population_size
+
+    def _variables2state(self, date, *values):
+        S, I, R = values
+
         n_infection = self.current_state.n_infection
-        date = self.current_state.date
-        plus_one = datetime.timedelta(days=1)
+        n_infection += (self.current_state.susceptible - S)
 
-        for Sp, Ip, Rp in self.simulator(S, I, R, dt=n_steps):
-            n_infection += (S - Sp)
-            S, I, R = Sp, Ip, Rp
+        state = State(date)
+        state.susceptible = S
+        state.infectious = I
+        state.recovered = R
+        state.n_infection = n_infection
 
-            date = date + plus_one
-            state = State(S, E, I, R, date, n_infection=n_infection)
-
-            if np.abs(N - S - E - I - R) > 1e-5:
-                raise ValueError("Conservation error: {} =/= {}".format(N, S + E + I + R))
-
-            self.set_state(state)
-
-            yield state
+        return state
 

@@ -37,11 +37,10 @@ class ReproductionNumberMPlot(MultiOutputPlot):
 
 class InfectedMPlot(MultiOutputPlot):
     def plot_outcome(self, outcome, color="k", label=None, **kwargs):
-        states = outcome.state_history
-        t = np.arange(len(states))
+        t = np.arange(len(outcome))
 
         # rates
-        i = np.array([s.infected for s in states])
+        i = np.array([s.infected for s in outcome])
 
         self.axes.plot(t, i, color=color, label=label)
 

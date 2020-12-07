@@ -2,7 +2,9 @@ import argparse, sys
 import datetime
 
 from episim.data import Outcome, State
-from episim.parameters import PopulationBehavior, Confine
+from episim.ontology import Ontology
+from episim.parameters import PopulationBehavior, Confine, \
+    TransmissionRateMultiplier
 from episim.plot.multi_outcome import ComparatorDashboard
 from episim.scenario import Scenario
 from episim.plot import FullDashboard
@@ -64,6 +66,7 @@ def main(argv=sys.argv[1:]):
     for i, outcome in enumerate(outcomes):
         FullDashboard()(outcome).show()#.save("dashboard_{}.png".format(i))
 
+
     # ComparatorDashboard()(*outcomes[1:]).show()
 
 
@@ -75,7 +78,9 @@ class BaseScenario(Scenario):
         I = n_infectious
         if initial_date is None:
             initial_date = datetime.date(2020, 1, 1)
-        self.initial_state = State(N-I, 0, I, 0, initial_date, n_infection=I)
+        self.initial_state = State(initial_date, susceptible=N-I, infectious=I,
+                                   n_infection=I)
+        # self.initial_state = State(N-I, 0, I, 0, initial_date, n_infection=I)
         if virus is None:
             virus = SARSCoV2Th()
         self.virus = virus
@@ -97,10 +102,12 @@ class BaseScenario(Scenario):
 
 
     def starting_description(self, model):
+        ontology = Ontology.default_ontology()
+        state = ontology(self.initial_state)
         descr_ls = [
             "Number of infectious    {:d} / {:d}    total population size"
-            "".format(self.initial_state.infectious,
-                      self.initial_state.population_size),
+            "".format(state.infectious,
+                      state.population),
             "{}".format(self.virus),
             "Pop.: {}".format(self.population),
             "Model: {}".format(model)
@@ -137,7 +144,9 @@ class SanityMeasure(BaseScenario):
         outcome = Outcome.from_model(model, self.n_days_1,
                                      self.starting_description(model))
 
-        model.beta *= self.measure_effect
+
+        virus = TransmissionRateMultiplier(self.virus, 0.5)
+        model = self.get_model(model_factory, virus=virus, state=outcome.last_state)
         descr_ls = [
             "Sanity measures: dividing transmission rate by "
             "{:.2f}".format(1./self.measure_effect),
